@@ -1,7 +1,5 @@
+import {UpdateUserData} from '../models/UpdateUserData';
 
-  import {UpdateUserData} from '../models/UpdateUserData';
-
-  
   export const validateField = (name: string, value: string, validationErrors: Partial<UpdateUserData>): Partial<UpdateUserData> => {
     let errors: Partial<UpdateUserData> = { ...validationErrors };
   
