@@ -1,0 +1,210 @@
+import React, { useState } from 'react';
+import { UserData } from '../models/UserData';
+import { addUser } from '../services/UserService';
+import { validateField, validateForm } from '../form-validations/AddUserValidation';
+
+const AddUser: React.FC = () => {
+  const [formData, setFormData] = useState<UserData>({
+    firstName: '',
+    lastName: '',
+    maidenName: '',
+    age: 0,
+    gender: '',
+    email: '',
+    phone: '',
+    username: '',
+    password: '',
+    birthDate: '',
+    bloodGroup: '',
+    height: 0,
+    weight: 0,
+    eyeColor: '',
+  });
+
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+
+  const calculateAge = (birthDate: string): number => {
+    const today = new Date();
+    const birthDateObj = new Date(birthDate);
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const monthDifference = today.getMonth() - birthDateObj.getMonth();
+
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDateObj.getDate())) {
+      age--;
+    }
+
+    return age;
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+    setValidationErrors(validateField(name, value, validationErrors));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formValidationErrors = validateForm(formData);
+    setValidationErrors(formValidationErrors);
+
+    if (Object.keys(formValidationErrors).length > 0) {
+      return;
+    }
+
+    const age = calculateAge(formData.birthDate);
+    const data = { ...formData, age };
+
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      const response = await addUser(data);
+      setSuccess('User added successfully!');
+      console.log("User Added: ", response);
+
+      // Reset form data
+      setFormData({
+        firstName: '',
+        lastName: '',
+        maidenName: '',
+        age: 0,
+        gender: '',
+        email: '',
+        phone: '',
+        username: '',
+        password: '',
+        birthDate: '',
+        bloodGroup: '',
+        height: 0,
+        weight: 0,
+        eyeColor: '',
+      });
+    } catch (err) {
+      setError('Failed to add user. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mx-20 my-6 p-6 bg-purple-100 border-2 border-balck rounded-3xl">
+      <h1 className="text-3xl font-bold mb-6">Add User</h1>
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Form fields */}
+          {[
+            { label: 'First Name', name: 'firstName', type: 'text' },
+            { label: 'Last Name', name: 'lastName', type: 'text' },
+            { label: 'Maiden Name', name: 'maidenName', type: 'text' },
+            { label: 'Birth Date', name: 'birthDate', type: 'date' },
+            { label: 'Email', name: 'email', type: 'email' },
+            { label: 'Phone', name: 'phone', type: 'text' },
+            { label: 'Username', name: 'username', type: 'text' },
+            { label: 'Password', name: 'password', type: 'password' },
+            { label: 'Height (cm)', name: 'height', type: 'number' },
+            { label: 'Weight (kg)', name: 'weight', type: 'number' },
+          ].map(({ label, name, type }) => (
+            <div key={name}>
+              <label className="block text-sm font-medium text-gray-700">{label}</label>
+              <input
+                type={type}
+                name={name}
+                value={formData[name as keyof UserData] as string | number}
+                onChange={handleChange}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              />
+              {validationErrors[name] && (
+                <span className="text-red-500 text-sm">{validationErrors[name]}</span>
+              )}
+            </div>
+          ))}
+          {/* Gender Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Gender</label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              required
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+            {validationErrors.gender && (
+              <span className="text-red-500 text-sm">{validationErrors.gender}</span>
+            )}
+          </div>
+          {/* Blood Group Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Blood Group</label>
+            <select
+              name="bloodGroup"
+              value={formData.bloodGroup}
+              onChange={handleChange}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              required
+            >
+              <option value="">Select Blood Group</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+            {validationErrors.bloodGroup && (
+              <span className="text-red-500 text-sm">{validationErrors.bloodGroup}</span>
+            )}
+          </div>
+          {/* Eye Color Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Eye Color</label>
+            <select
+              name="eyeColor"
+              value={formData.eyeColor}
+              onChange={handleChange}
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              required
+            >
+              <option value="">Select Eye Color</option>
+              <option value="Brown">Brown</option>
+              <option value="Blue">Blue</option>
+              <option value="Green">Green</option>
+              <option value="Gray">Gray</option>
+              <option value="Amber">Amber</option>
+              <option value="Hazel">Hazel</option>
+            </select>
+            {validationErrors.eyeColor && (
+              <span className="text-red-500 text-sm">{validationErrors.eyeColor}</span>
+            )}
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+        >
+          {loading ? 'Adding...' : 'Add User'}
+        </button>
+      </form>
+      {error && <p className="mt-4 text-red-500">{error}</p>}
+      {success && <p className="mt-4 text-green-500">{success}</p>}
+    </div>
+  );
+};
+
+export default AddUser;
+
