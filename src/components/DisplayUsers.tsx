@@ -1,71 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect} from 'react';
 import UserData from './UserData';
 import UpdateUser from './UpdateUser';
-import { User } from '../models/User';
-import { getUsers, getUserById, deleteUser } from '../services/UserService';
+import { getUserById} from '../services/UserService';
+import { useUserStore } from '../stores/useUserStore';
 
 const DisplayUsers: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [userToUpdate, setUserToUpdate] = useState<User | null>(null);
+  const {
+    users, loading, error, selectedUser, userToUpdate,
+    fetchUsers, setSelectedUser, setUserToUpdate, deleteUserById, setError
+} = useUserStore();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const usersData = await getUsers();
-        setUsers(usersData);
-      } catch (err) {
-        setError('Failed to fetch users');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+useEffect(() => {
     fetchUsers();
-  }, []);
+}, [fetchUsers]);
 
-  const handleReadClick = async (userId: number) => {
+const handleReadClick = async (userId: number) => {
     try {
-      const userData = await getUserById(userId);
-      setSelectedUser(userData);
+        const userData = await getUserById(userId);
+        setSelectedUser(userData);
     } catch (err) {
-      setError('Failed to fetch user details');
+        setError('Failed to fetch user details');
     }
-  };
+};
 
-  const handleUpdateClick = async (userId: number) => {
+const handleUpdateClick = async (userId: number) => {
     try {
-      const userData = await getUserById(userId);
-      setUserToUpdate(userData);
+        const userData = await getUserById(userId);
+        setUserToUpdate(userData);
     } catch (err) {
-      setError('Failed to fetch user details');
+        setError('Failed to fetch user details');
     }
-  };
+};
 
-  const handleDeleteClick = async (userId: number) => {
-    // eslint-disable-next-line no-restricted-globals
+const handleDeleteClick = async (userId: number) => {
+      // eslint-disable-next-line no-restricted-globals
     const userConfirmed = confirm("Are you sure you want to delete this user?");
     if (!userConfirmed) {
-      return;
+        return;
     }
-    try {
-      await deleteUser(userId);
-      alert('User deleted successfully...');
-      setUsers(users.filter(user => user.id !== userId));
-    } catch (err) {
-      setError('Failed to delete user');
-    }
-  };
+    await deleteUserById(userId);
+    alert("User deleted successfully...");
+};
 
-  const handleCloseUserData = () => {
+const handleCloseUserData = () => {
     setSelectedUser(null);
     setUserToUpdate(null);
-  };
+};
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+if (loading) return <p>Loading...</p>;
+if (error) return <p>{error}</p>;
 
   return (
     <div className="bg-purple-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
@@ -102,7 +85,7 @@ const DisplayUsers: React.FC = () => {
         </div>
       ))}
       {selectedUser && (
-        <UserData user={selectedUser} onClose={handleCloseUserData} />
+        <UserData/>
       )}
       {userToUpdate && (
         <UpdateUser user={userToUpdate} onClose={handleCloseUserData} />
@@ -112,4 +95,9 @@ const DisplayUsers: React.FC = () => {
 };
 
 export default DisplayUsers;
+
+
+
+
+
 

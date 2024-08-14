@@ -1,17 +1,16 @@
 import React from 'react';
-import {User} from '../models/User';
+import { useUserStore } from '../stores/useUserStore';
 
-interface UserDataProps {
-  user: User;
-  onClose: () => void;
-}
+const UserData: React.FC = () => {
+  const { selectedUser: user, closeUserData } = useUserStore();
 
-const UserData: React.FC<UserDataProps> = ({ user, onClose }) => {
+  if (!user) return null; // Return null if no user is selected
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
       <div className="bg-white w-full max-w-lg mx-4 md:mx-0 rounded-lg shadow-lg p-6 relative">
         <button
-          onClick={onClose}
+          onClick={closeUserData}
           className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
         >
           &times;
@@ -42,3 +41,4 @@ const UserData: React.FC<UserDataProps> = ({ user, onClose }) => {
 };
 
 export default UserData;
+

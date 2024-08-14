@@ -1,101 +1,19 @@
-import React, { useState } from 'react';
-import { UserData } from '../models/UserData';
-import { addUser } from '../services/UserService';
-import { validateField, validateForm } from '../form-validations/AddUserValidation';
+import React from 'react';
+import { useAddUserStore } from '../stores/useAddUserStore';
 
 const AddUser: React.FC = () => {
-  const [formData, setFormData] = useState<UserData>({
-    firstName: '',
-    lastName: '',
-    maidenName: '',
-    age: 0,
-    gender: '',
-    email: '',
-    phone: '',
-    username: '',
-    password: '',
-    birthDate: '',
-    bloodGroup: '',
-    height: 0,
-    weight: 0,
-    eyeColor: '',
-  });
-
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
-
-  const calculateAge = (birthDate: string): number => {
-    const today = new Date();
-    const birthDateObj = new Date(birthDate);
-    let age = today.getFullYear() - birthDateObj.getFullYear();
-    const monthDifference = today.getMonth() - birthDateObj.getMonth();
-
-    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDateObj.getDate())) {
-      age--;
-    }
-
-    return age;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    setValidationErrors(validateField(name, value, validationErrors));
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const formValidationErrors = validateForm(formData);
-    setValidationErrors(formValidationErrors);
-
-    if (Object.keys(formValidationErrors).length > 0) {
-      return;
-    }
-
-    const age = calculateAge(formData.birthDate);
-    const data = { ...formData, age };
-
-    try {
-      setLoading(true);
-      setError(null);
-      setSuccess(null);
-
-      const response = await addUser(data);
-      setSuccess('User added successfully!');
-      console.log("User Added: ", response);
-
-      // Reset form data
-      setFormData({
-        firstName: '',
-        lastName: '',
-        maidenName: '',
-        age: 0,
-        gender: '',
-        email: '',
-        phone: '',
-        username: '',
-        password: '',
-        birthDate: '',
-        bloodGroup: '',
-        height: 0,
-        weight: 0,
-        eyeColor: '',
-      });
-    } catch (err) {
-      setError('Failed to add user. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    formData,
+    loading,
+    error,
+    success,
+    validationErrors,
+    handleChange,
+    handleSubmit,
+  } = useAddUserStore();
 
   return (
-    <div className="mx-20 my-6 p-6 bg-purple-100 border-2 border-balck rounded-3xl">
+    <div className="mx-20 my-6 p-6 bg-purple-100 border-2 border-black rounded-3xl">
       <h1 className="text-3xl font-bold mb-6">Add User</h1>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -117,7 +35,7 @@ const AddUser: React.FC = () => {
               <input
                 type={type}
                 name={name}
-                value={formData[name as keyof UserData] as string | number}
+                value={formData[name as keyof typeof formData] as string | number}
                 onChange={handleChange}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
               />
@@ -207,4 +125,3 @@ const AddUser: React.FC = () => {
 };
 
 export default AddUser;
-

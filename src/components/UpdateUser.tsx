@@ -1,7 +1,7 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useEffect } from 'react';
 import { User } from '../models/User';
 import { updateUser } from '../services/UserService';
-import { validateField, validateForm } from '../form-validations/UpdateUserValidation';
+import { useUserUpdateStore } from '../stores/useUserUpdateStore';
 
 interface UpdateUserProps {
     user: User;
@@ -9,34 +9,21 @@ interface UpdateUserProps {
 }
 
 const UpdateUser: React.FC<UpdateUserProps> = ({ user, onClose }) => {
-    const [formData, setFormData] = useState({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        maidenName: user.maidenName,
-        email: user.email,
-        username: user.username,
-        password: user.password,
-        height: user.height.toString(), 
-        weight: user.weight.toString(), 
-    });
+    const { formData, validationErrors, setFormData, validateForm, initializeFormData } = useUserUpdateStore();
 
-    const [validationErrors, setValidationErrors] = useState<Partial<typeof formData>>({});
+    useEffect(() => {
+        initializeFormData(user);
+    }, [user, initializeFormData]);
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
-        setValidationErrors(validateField(name, value, validationErrors));
+        setFormData(name, value);
     };
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const errors = validateForm(formData);
-        if (Object.keys(errors).length > 0) {
-            setValidationErrors(errors);
+        if (!validateForm()) {
             return;
         }
 
@@ -44,16 +31,16 @@ const UpdateUser: React.FC<UpdateUserProps> = ({ user, onClose }) => {
             const updatedData = {
                 ...user,
                 ...formData,
-                height: parseInt(formData.height), 
-                weight: parseInt(formData.weight), 
-                phone: user.phone, 
-                image: user.image, 
-                age: user.age, 
-                birthDate: user.birthDate, 
+                height: parseInt(formData.height),
+                weight: parseInt(formData.weight),
+                phone: user.phone,
+                image: user.image,
+                age: user.age,
+                birthDate: user.birthDate,
             };
             const response = await updateUser(user.id, updatedData);
             console.log('Updated User:', response);
-            onClose(); 
+            onClose();
         } catch (err) {
             console.error('Failed to update user:', err);
         }
